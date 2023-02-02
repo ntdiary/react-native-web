@@ -67,12 +67,14 @@ function focusLastDescendant(element: any) {
 
 export type ModalFocusTrapProps = {|
   active?: boolean | (() => boolean),
-  children?: any
+  children?: any,
+  focusAfterClosed?: ?() => HTMLElement
 |};
 
 const ModalFocusTrap = ({
   active,
-  children
+  children,
+  focusAfterClosed
 }: ModalFocusTrapProps): React.Node => {
   const trapElementRef = React.useRef<?HTMLElement>();
   const focusRef = React.useRef<{
@@ -141,19 +143,30 @@ const ModalFocusTrap = ({
 
   // To be fully compliant with WCAG we need to refocus element that triggered opening modal
   // after closing it
+  const triggerElementRef = React.useRef(null);
   React.useEffect(function () {
     if (canUseDOM) {
-      const lastFocusedElementOutsideTrap = document.activeElement;
-      return function () {
-        if (
-          lastFocusedElementOutsideTrap &&
-          document.contains(lastFocusedElementOutsideTrap)
-        ) {
-          UIManager.focus(lastFocusedElementOutsideTrap);
-        }
-      };
+      triggerElementRef.current = document.activeElement;
     }
   }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (!canUseDOM) {
+        return;
+      }
+      let element = null;
+      if (focusAfterClosed) {
+        element = focusAfterClosed();
+      }
+      if (!element || element.nodeType !== 1) {
+        element = triggerElementRef.current;
+      }
+      if (element && document.contains(element)) {
+        UIManager.focus(element);
+      }
+    };
+  }, [focusAfterClosed]);
 
   return (
     <>

@@ -42,7 +42,8 @@ export type ModalProps = {
     | 'landscape-right'
   >,
   transparent?: ?boolean,
-  visible?: ?boolean
+  visible?: ?boolean,
+  focusAfterClosed?: ?() => HTMLElement
 };
 
 let uniqueModalIdentifier = 0;
@@ -95,6 +96,7 @@ const Modal: React.AbstractComponent<
     onShow,
     transparent,
     visible = true,
+    focusAfterClosed,
     ...rest
   } = props;
 
@@ -130,7 +132,7 @@ const Modal: React.AbstractComponent<
         onShow={onShowCallback}
         visible={visible}
       >
-        <ModalFocusTrap active={isActive}>
+        <ModalFocusTrap active={isActive} focusAfterClosed={focusAfterClosed}>
           <ModalContent
             {...rest}
             active={isActive}
