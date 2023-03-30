@@ -1,5 +1,13 @@
-import React, { useState, useMemo } from 'react';
-import { Modal, View, Text, Button, StyleSheet } from 'react-native';
+import React, { useState, useMemo, useRef } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  Button,
+  StyleSheet,
+  UIManager,
+  TextInput
+} from 'react-native';
 import Example from '../../shared/example';
 
 function Gap() {
@@ -78,17 +86,47 @@ function Modalception({ depth = 1 }) {
   );
 }
 
+if (typeof window !== 'undefined' && window.addEventListener) {
+  window.addEventListener(
+    'focus',
+    (e) => {
+      // TODO:del
+      console.log(e.target);
+    },
+    true
+  );
+}
+
 function SimpleModal() {
   const [isVisible, setIsVisible] = useState(false);
-
+  const input1Ref = useRef();
+  const input2Ref = useRef();
+  const onDismiss = () => {
+    UIManager.setReturnFocus(input2Ref.current);
+  };
   return (
     <>
       <Button onPress={() => setIsVisible(true)} title={'Simple modal'} />
-      <Modal onRequestClose={() => setIsVisible(false)} visible={isVisible}>
+      <TextInput id="demo1" ref={input1Ref} style={[styles.input]} />
+      <TextInput id="demo2" ref={input2Ref} style={[styles.input]} />
+      <Modal
+        onDismiss={onDismiss}
+        onRequestClose={() => setIsVisible(false)}
+        visible={isVisible}
+      >
         <View style={styles.container}>
           <Text>Hello, World!</Text>
           <Gap />
-          <Button onPress={() => setIsVisible(false)} title={'Close'} />
+          <Button
+            onPress={() => {
+              UIManager.disableTrap();
+              queueMicrotask(() => {
+                input1Ref.current && input1Ref.current.focus();
+                setIsVisible(false);
+              });
+            }}
+            title={'Close'}
+          />
         </View>
       </Modal>
     </>
@@ -138,6 +176,10 @@ const styles = StyleSheet.create({
   },
   gap: {
     height: 10
+  },
+  input: {
+    borderColor: '#aaa',
+    borderWidth: 1
   }
 });
 

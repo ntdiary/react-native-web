@@ -14,6 +14,7 @@ import createElement from '../createElement';
 import StyleSheet from '../StyleSheet';
 import UIManager from '../UIManager';
 import canUseDOM from '../../modules/canUseDom';
+import ModalManager from './ModalManager';
 
 /**
  * This Component is used to "wrap" the modal we're opening
@@ -145,12 +146,13 @@ const ModalFocusTrap = ({
     if (canUseDOM) {
       const lastFocusedElementOutsideTrap = document.activeElement;
       return function () {
-        if (
-          lastFocusedElementOutsideTrap &&
-          document.contains(lastFocusedElementOutsideTrap)
-        ) {
-          UIManager.focus(lastFocusedElementOutsideTrap);
+        const element =
+          ModalManager.triggerElementRef.current ||
+          lastFocusedElementOutsideTrap;
+        if (element && document.contains(element)) {
+          UIManager.focus(element);
         }
+        ModalManager.triggerElementRef.current = null;
       };
     }
   }, []);

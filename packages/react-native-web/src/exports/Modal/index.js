@@ -15,6 +15,7 @@ import ModalPortal from './ModalPortal';
 import ModalAnimation from './ModalAnimation';
 import ModalContent from './ModalContent';
 import ModalFocusTrap from './ModalFocusTrap';
+import ModalManager from './ModalManager';
 
 export type ModalProps = {
   ...ViewProps,
@@ -45,44 +46,6 @@ export type ModalProps = {
   visible?: ?boolean
 };
 
-let uniqueModalIdentifier = 0;
-
-const activeModalStack = [];
-const activeModalListeners = {};
-
-function notifyActiveModalListeners() {
-  if (activeModalStack.length === 0) {
-    return;
-  }
-  const activeModalId = activeModalStack[activeModalStack.length - 1];
-  activeModalStack.forEach((modalId) => {
-    if (modalId in activeModalListeners) {
-      activeModalListeners[modalId](modalId === activeModalId);
-    }
-  });
-}
-
-function removeActiveModal(modalId) {
-  if (modalId in activeModalListeners) {
-    // Before removing this listener we should probably tell it
-    // that it's no longer the active modal for sure.
-    activeModalListeners[modalId](false);
-    delete activeModalListeners[modalId];
-  }
-  const index = activeModalStack.indexOf(modalId);
-  if (index !== -1) {
-    activeModalStack.splice(index, 1);
-    notifyActiveModalListeners();
-  }
-}
-
-function addActiveModal(modalId, listener) {
-  removeActiveModal(modalId);
-  activeModalStack.push(modalId);
-  activeModalListeners[modalId] = listener;
-  notifyActiveModalListeners();
-}
-
 const Modal: React.AbstractComponent<
   ModalProps,
   React.ElementRef<typeof ModalContent>
@@ -100,26 +63,26 @@ const Modal: React.AbstractComponent<
 
   // Set a unique model identifier so we can correctly route
   // dismissals and check the layering of modals.
-  const modalId = React.useMemo(() => uniqueModalIdentifier++, []);
+  const modalId = React.useMemo(() => ModalManager.generateId(), []);
 
   const [isActive, setIsActive] = React.useState(false);
 
   const onDismissCallback = React.useCallback(() => {
-    removeActiveModal(modalId);
+    ModalManager.removeActiveModal(modalId);
     if (onDismiss) {
       onDismiss();
     }
   }, [modalId, onDismiss]);
 
   const onShowCallback = React.useCallback(() => {
-    addActiveModal(modalId, setIsActive);
+    ModalManager.addActiveModal(modalId, setIsActive);
     if (onShow) {
       onShow();
     }
   }, [modalId, onShow]);
 
   React.useEffect(() => {
-    return () => removeActiveModal(modalId);
+    return () => ModalManager.removeActiveModal(modalId);
   }, [modalId]);
 
   return (

@@ -8,6 +8,7 @@
  */
 
 import setValueForStyles from '../../modules/setValueForStyles';
+import ModalManager from '../Modal/ModalManager';
 
 const getRect = (node) => {
   const height = node.offsetHeight;
@@ -125,7 +126,15 @@ const UIManager = {
   },
 
   // mocks
-  setLayoutAnimationEnabledExperimental() {}
+  setLayoutAnimationEnabledExperimental() {},
+
+  disableTrap() {
+    ModalManager.disableTrap();
+  },
+
+  setReturnFocus(node) {
+    ModalManager.triggerElementRef.current = node;
+  }
 };
 
 export default UIManager;
